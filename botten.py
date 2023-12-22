@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import discord #py-cord
+import discord
+import urllib.parse
 
 # dba scraper
 class Opslag:
@@ -16,7 +17,7 @@ def GetTopResultsForKeyword(keyword:str):
     grundURL = "https://www.dba.dk/soeg/?soeg={}"
 
     sesh = requests.session()
-    soup = BeautifulSoup(sesh.get(grundURL.format(keyword)).content, "html.parser")
+    soup = BeautifulSoup(sesh.get(grundURL.format(urllib.parse.quote(keyword))).content, "html.parser")
 
     resultsTable = soup.find("table", attrs={"class":"search-result searchResults srpListView"}).find("tbody")
     allListings = resultsTable.findAll("tr")[3::]
@@ -53,9 +54,6 @@ def GetTopResultsForKeyword(keyword:str):
 
 
 # discord bot:
-
-
-
 bot = discord.Bot()
 
 @bot.event
@@ -75,8 +73,8 @@ __/\\\\\\\\\\\\________/\\\\\\\\\\\\___________________/\\\\\\\_________________
 Den Grønne Avis:
 - DBA scraper discord bot
 -----------------------------------------------------------------------------------------------------------------""")
-
     print("Den Grønne Avis er ONLINE")
+
 
 @bot.slash_command(name = "gettopresult", description = "Get top result from keyword search")
 async def gettopresult(ctx, keyword:str, placering:int):
@@ -84,17 +82,18 @@ async def gettopresult(ctx, keyword:str, placering:int):
     print("søger efter: "+keyword)
     try:
         opslagAll = GetTopResultsForKeyword(keyword)
+        
     except:
-        print("Der er sket en fejl med søgning: keyword={0} placering={1}".format(keyword,placering))
-        await ctx.respond("Der er sket en fejl med søgning: keyword={0} placering={1}".format(keyword,placering))
-        return
-    if len(opslagAll) == 0:
+        print("Der er sket en fejl med søgning: keyword={0} placering={1},".format(keyword,placering))
         await ctx.respond("der er **INGEN** opslag for søgeordet: **{}**".format(keyword))
         return
-    elif (placering <0 or placering > len(opslagAll)):
+    
+    if (placering <0 or placering > len(opslagAll)):
         await ctx.respond("Så mange opslag er der ikke for søge ordet **{1}**! Prøv et tal mellem **0 og {0}**".format(len(opslagAll)-1, keyword))
         return
+    
     opslag = opslagAll[placering]
+    
     embed = discord.Embed(
         title="Søgeord: "+keyword+" Placering på listen: "+str(placering),
         color=discord.Colour.blurple(),
@@ -105,10 +104,7 @@ async def gettopresult(ctx, keyword:str, placering:int):
     embed.add_field(name="beskrivelse:", value=opslag.beskrivelse)
     embed.add_field(name="link til opslag:", value=opslag.link)
 
-
-
     await ctx.respond("her er dit opslag du ledte efter", embed=embed)
-token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-bot.run(token) # run the bot with the token
 
-
+token = "indsæt din egen token her"
+bot.run(token)  # run the bot with the token
